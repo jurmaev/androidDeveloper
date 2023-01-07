@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>AndroidDeveloper</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'app/css/normalize.css' %}">
+    <link rel="stylesheet" href="{% static 'app/css/style.css' %}">
+    <script defer src="{% static 'app/js/main.js' %}"></script>
+</head>
+
+<body>
+    <div class="sidenav" id="sidenav">
+        <a href="#" class="sidenav__link sidenav__closebtn">&times;</a>
+        <a class="sidenav__link" href="{% url 'index' %}">Информация</a>
+        <a class="sidenav__link" href="{% url 'demand' %}">Востребованность</a>
+    </div>
+    <div id="main">
+        <header class="header">
+            <div class="container header__container">
+                <button id="openbtn">Open</button>
+                <h1 class="header__title">Android Developer Info</h1>
+            </div>
+        </header>
+        {% block content %}
+        {% endblock %}
+        <footer class="footer">
+            <div class="container">
+                <p class="footer__text">Беляев Артемий Максимович</p>
+                <p class="footer__text">РИ-210943</p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

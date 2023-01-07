@@ -1,0 +1,63 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block content %}
+    <section class="vacancy">
+        <div class="container">
+            <h2 class="vacancy__title">Android-разработчик</h2>
+            <img src="{% static 'app/img/developer.jpg' %}" alt="" class="vacancy__img">
+            <h3 class="vacancy__subtitle">Кто такой Android-разработчик</h3>
+            <p class="vacancy__info">Android-разработчик создает, обновляет, усовершенствует мобильные приложения для
+                смартфонов, планшетов, электронных книг, игровых приставок и других девайсов, работающих на операционной
+                системе Android. Профессия считается самой востребованной в мобильной разработке, так как «Андроид»
+                установлен в 80 % мобильных устройств мира.</p>
+            <h3 class="vacancy__subtitle">Что делает Android-разработчик</h3>
+            <p class="vacancy__info">Android Developer (разработчик на «Андроиде», андроид девелопер) создает мобильные
+                приложения на операционной системе Android. Андроид-программист использует языки Java, Kotlin, C++,
+                иногда Javascript. В 2019 году Google объявил Kotlin официальным и предпочтительным языком для
+                Android-разработки.</p>
+            <h3 class="vacancy__subtitle">Список функций андроид-разработчика:</h3>
+            <ul class="vacancy__list">
+                <li class="vacancy__item">создание архитектуры приложения</li>
+                <li class="vacancy__item">конструирование интерфейса программы</li>
+                <li class="vacancy__item">написание программного кода</li>
+                <li class="vacancy__item">тестирование программного кода</li>
+                <li class="vacancy__item">загрузка программы в android-магазин или на сайт</li>
+                <li class="vacancy__item">внесение правок, выпуск обновлений</li>
+                <li class="vacancy__item">анализ поведения пользователей для улучшения программы</li>
+            </ul>
+            <p class="vacancy__info">Android-разработчик может работать на себя, создавая приложения и продавая подписку
+                на них через Google Play. Разработка не требует больших материальных вложений, но
+                программисту-фрилансеру надо разбираться в маркетинге и дизайне.</p>
+            <h3 class="vacancy__subtitle">Насколько востребован Android-разработчик</h3>
+            <p class="vacancy__info">По данным <a
+                    href="https://www.statista.com/statistics/272698/global-market-share-held-by-mobile-operating-systems-since-2009/"
+                    class="vacancy__link">statista</a>, доля рынка мобильных операционных систем Android в июне 2021
+                года в мире составляла 72,84%, на iOS приходилось 26,34%. В 2022 году соотношение сохранилось в пользу
+                «Андроида», он даже укрепил позиции, увеличив сферу своего влияния до 80 %.</p>
+            <p class="vacancy__info">В марте 2022 года на hh.ru зарегистрировано более 2 000 вакансии
+                Android-разработчиков в России.</p>
+            <h3 class="vacancy__subtitle">Как стать Android-разработчиком</h3>
+            <p class="vacancy__info">Стать разработчиком Android можно самостоятельно или на курсах. Минимальный набор
+                знаний и умений андроид девелопера:</p>
+            <ul class="vacancy__list">
+                <li class="vacancy__item">английский язык на уровне Intermediate (B1), чтобы не испытывать трудностей с
+                    поиском нужной информации
+                </li>
+                <li class="vacancy__item">операционная система Android (ее структура, жизненный цикл приложений)</li>
+                <li class="vacancy__item">языки программирования Java и Kotlin</li>
+                <li class="vacancy__item">HTML и CSS</li>
+                <li class="vacancy__item">принципы программирования ООП (объектно-ориентированное программирование)
+                </li>
+                <li class="vacancy__item">среда мобильной разработки Android Studio для написания кода и редактирования
+                    интерфеса приложения, Android SDK
+                </li>
+                <li class="vacancy__item">компоненты и инструменты Material Design (бесплатно предоставляется компанией
+                    Google для создания макетов и дизайна приложений)
+                </li>
+                <li class="vacancy__item">основы контроля версий кода (Git, github)</li>
+                <li class="vacancy__item">отладка и тестирование приложения</li>
+                <li class="vacancy__item">некоторые алгоритмы разработки</li>
+            </ul>
+        </div>
+    </section>
+{% endblock %}
