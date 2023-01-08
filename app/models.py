@@ -1,7 +1,7 @@
 from django.db import models
 
 class YearStatistics(models.Model):
-    year = models.IntegerField('Год')
+    year = models.IntegerField('Год', primary_key=True)
     average_salary = models.FloatField('Средняя зарплата')
     number_of_vacancies = models.IntegerField('Количество вакансий')
     average_salary_by_profession = models.FloatField('Средняя зарплата по профессии')
@@ -15,7 +15,7 @@ class YearStatistics(models.Model):
         verbose_name_plural = 'Статистика по годам'
 
 class CitySalaryStatistics(models.Model):
-    city = models.CharField('Город', max_length= 50)
+    city = models.CharField('Город', max_length= 50, primary_key=True)
     average_salary = models.FloatField('Средняя зарплата')
 
     def __str__(self):
@@ -26,7 +26,7 @@ class CitySalaryStatistics(models.Model):
         verbose_name_plural = 'Средняя зарплата по городам'
 
 class CityShareStatistics(models.Model):
-    city = models.CharField('Город', max_length=50)
+    city = models.CharField('Город', max_length=50, primary_key=True)
     share = models.FloatField('Часть')
 
     def __str__(self):
@@ -37,7 +37,7 @@ class CityShareStatistics(models.Model):
         verbose_name_plural = 'Доля вакансий по городам'
 
 class TopSkills(models.Model):
-    year = models.IntegerField('Год')
+    year = models.IntegerField('Год', primary_key=True)
     skills = models.TextField('Топ-10 навыков', default='')
 
     def __str__(self):

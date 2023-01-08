@@ -167,22 +167,15 @@ class Statistics:
         def append_skills(row):
             if not pd.isna(row['key_skills']):
                 skills[row['published_at']].extend(row['key_skills'].split('\n'))
-
         conn = sqlite3.connect(self.file_name)
-
         df = pd.read_sql_query("SELECT * FROM salary_info", conn)
         df = df[df['name'] == self.vacancy]
-        # print(df.head(10))
         df['published_at'] = df['published_at'].transform(lambda x: x[:4])
         skills = {k: [] for k in df['published_at'].unique()}
         df.apply(append_skills, axis=1)
         for k, v in skills.items():
-            print(k)
-            for skill in list(sorted(dict(Counter(v)).items(), key=lambda x: x[1], reverse=True))[:10]:
-                print(skill[0], end=',')
-            print()
-            # print(k, list(sorted(dict(Counter(v)).items(), key=lambda x: x[1], reverse=True))[:10])
-            # print(k, sorted(dict(Counter(v)).items(), key= lambda x: x[1], reverse= True))[:10])
+            skills[k] = [i[0] for i in list(sorted(dict(Counter(v)).items(), key=lambda x: x[1], reverse=True))[:10]]
+        return skills
 
 
 class Report:
@@ -264,17 +257,14 @@ class Report:
 # converter.convert_salary_to_rub_sqlite()
 
 # statistics = Statistics('salary_info.sqlite3', 'Аналитик')
-# statistics.get_skills_statistics()
+# skills_statistics = statistics.get_skills_statistics()
+# print(skills_statistics)
 # demand_statistics = statistics.get_demand_statistics()
-
-# for year in demand_statistics[0].keys():
-#     print(year, demand_statistics[0][year], demand_statistics[1][year], demand_statistics[2][year], demand_statistics[3][year], sep='\t')
+# print(demand_statistics)
 # geo_statistics = statistics.get_geo_statistics()
-# for city in geo_statistics[0].keys():
-#     print(city, geo_statistics[0][city], sep='\t')
-# print()
-# for city in geo_statistics[1].keys():
-#     print(city, geo_statistics[1][city], sep='\t')
+# print(geo_statistics[0])
+# print(geo_statistics[1])
+
 # report = Report('Аналитик')
 # report.generate_demand_images(demand_statistics)
 # report.generate_city_images(geo_statistics)

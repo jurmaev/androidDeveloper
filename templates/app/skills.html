@@ -4,7 +4,7 @@
 <section class="skills">
     <div class="container">
         {% for item in skills_by_year %}
-        <h2 class="skills__header">{{ item.year }}</h2>
+        <h2 class="skills__header">Топ-навыки за {{ item.year }} год</h2>
         <ul class="skills__list">
             {% for skill in item.get_skills %}
             <li class="skills__item">{{ skill }}</li>
