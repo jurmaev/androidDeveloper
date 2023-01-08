@@ -49,5 +49,17 @@
         </library>
       </libraries>
     </data-source>
+    <data-source source="LOCAL" name="currency_dynamic [2]" uuid="8dd844b3-d347-480b-b4f8-76b529a35053">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\Users\jurma\PycharmProjects\androidDeveloper\app\services\currency_dynamic.sqlite3</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.39.2/sqlite-jdbc-3.39.2.jar</url>
+        </library>
+      </libraries>
+    </data-source>
   </component>
 </project>

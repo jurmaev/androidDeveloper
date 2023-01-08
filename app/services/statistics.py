@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from urllib.request import urlopen
 from dateutil import rrule
 from matplotlib import pyplot as plt
-# from app.models import YearStatistics
+from collections import Counter
 
 
 class Converter:
@@ -14,8 +14,8 @@ class Converter:
         self.file_name = file_name
         self.dynamic_file_name = dynamic_file_name
         self.currency_dynamic = self.get_currency_dynamic()
-        self.get_currency_dynamic_csv()
-        self.get_currency_dynamic_db()
+        # self.get_currency_dynamic_csv()
+        # self.get_currency_dynamic_db()
 
     def get_currency_dynamic(self):
         """
@@ -111,10 +111,12 @@ class Converter:
         conn = sqlite3.connect('salary_info.sqlite3')
         c = conn.cursor()
         c.execute(
-            'CREATE TABLE IF NOT EXISTS salary_info (name text, salary float, area_name text, published_at date)')
+            'CREATE TABLE IF NOT EXISTS salary_info (name text, salary float, area_name text, published_at date, key_skills text)')
         conn.commit()
-        df.loc[:, ['name', 'salary', 'area_name', 'published_at']].to_sql('salary_info', conn, if_exists='replace',
-                                                                          index=False)
+        print(df.head(10))
+        df.loc[:, ['name', 'salary', 'area_name', 'published_at', 'key_skills']].to_sql('salary_info', conn,
+                                                                                        if_exists='replace',
+                                                                                        index=False)
         c.execute('SELECT * FROM salary_info')
         conn.close()
 
@@ -137,30 +139,16 @@ class Statistics:
             "SELECT  strftime('%Y', published_at) as year, COUNT(name) as vacancies_number FROM salary_info GROUP BY strftime('%Y', published_at)",
             conn)
         salary_level_by_profession = pd.read_sql_query(
-            f"SELECT strftime('%Y', published_at) as year, ROUND(AVG(salary),4) as average_salary FROM salary_info WHERE name LIKE '%{self.vacancy}%' GROUP BY strftime('%Y', published_at)",
+            f"SELECT strftime('%Y', published_at) as year, ROUND(AVG(salary),4) as average_salary FROM salary_info WHERE LOWER(name) LIKE '%{self.vacancy}%' GROUP BY strftime('%Y', published_at)",
             conn)
         vacancies_by_profession = pd.read_sql_query(
-            f"SELECT  strftime('%Y', published_at) as year, COUNT(name) as vacancies_number FROM salary_info WHERE name LIKE '%{self.vacancy}%' GROUP BY strftime('%Y', published_at)",
+            f"SELECT  strftime('%Y', published_at) as year, COUNT(name) as vacancies_number FROM salary_info WHERE LOWER(name) LIKE '%{self.vacancy}%' GROUP BY strftime('%Y', published_at)",
             conn)
 
-        salary_level = Statistics.get_dict_from_df(salary_level, 'year', 'average_salary')
-        vacancies = Statistics.get_dict_from_df(
-            vacancies, 'year', 'vacancies_number')
-        salary_level_by_profession = Statistics.get_dict_from_df(salary_level_by_profession, 'year',
-                                                                                'average_salary')
-        vacancies_by_profession = Statistics.get_dict_from_df(
+        return Statistics.get_dict_from_df(salary_level, 'year', 'average_salary'), Statistics.get_dict_from_df(
+            vacancies, 'year', 'vacancies_number'), Statistics.get_dict_from_df(salary_level_by_profession, 'year',
+                                                                                'average_salary'), Statistics.get_dict_from_df(
             vacancies_by_profession, 'year', 'vacancies_number')
-        # settings.configure()
-        # for i in range(len(salary_level.items())):
-        #     year_stats = YearStatistics(year= int(list(salary_level.items())[i][0]),
-        #                    average_salary= float(list(salary_level.items())[i][1]),
-        #                    number_of_vacancies= int(list(vacancies.items())[i][1]),
-        #                    average_salary_by_profession= float(list(salary_level_by_profession.items())[i][1]),
-        #                    number_of_vacancies_by_profession= int(list(vacancies_by_profession.items())[i][1]))
-        #     year_stats.save()
-            # print(list(salary_level.items())[i])
-
-        return salary_level, vacancies, salary_level_by_profession, vacancies_by_profession
 
     def get_geo_statistics(self):
         conn = sqlite3.connect(self.file_name)
@@ -174,6 +162,27 @@ class Statistics:
             conn)
         return Statistics.get_dict_from_df(salary_level, 'city', 'salary'), Statistics.get_dict_from_df(
             share_of_vacancies, 'city', 'share')
+
+    def get_skills_statistics(self):
+        def append_skills(row):
+            if not pd.isna(row['key_skills']):
+                skills[row['published_at']].extend(row['key_skills'].split('\n'))
+
+        conn = sqlite3.connect(self.file_name)
+
+        df = pd.read_sql_query("SELECT * FROM salary_info", conn)
+        df = df[df['name'] == self.vacancy]
+        # print(df.head(10))
+        df['published_at'] = df['published_at'].transform(lambda x: x[:4])
+        skills = {k: [] for k in df['published_at'].unique()}
+        df.apply(append_skills, axis=1)
+        for k, v in skills.items():
+            print(k)
+            for skill in list(sorted(dict(Counter(v)).items(), key=lambda x: x[1], reverse=True))[:10]:
+                print(skill[0], end=',')
+            print()
+            # print(k, list(sorted(dict(Counter(v)).items(), key=lambda x: x[1], reverse=True))[:10])
+            # print(k, sorted(dict(Counter(v)).items(), key= lambda x: x[1], reverse= True))[:10])
 
 
 class Report:
@@ -215,7 +224,7 @@ class Report:
         ax.tick_params(axis='both', labelsize=8)
         ax.legend(fontsize=8, loc='upper left')
         ax.grid(True, axis='y')
-        plt.savefig('static/app/img/salary_level.png')
+        plt.savefig('/static/app/img/salary_level.png')
 
         fig, ax = plt.subplots()
         x_nums = np.arange(len(dicts[1].keys()))
@@ -228,7 +237,7 @@ class Report:
         ax.tick_params(labelsize=8)
         ax.legend(fontsize=8, loc='upper left')
         ax.grid(True, axis='y')
-        plt.savefig('static/app/img/vacancies.png')
+        plt.savefig('/static/app/img/vacancies.png')
 
     def generate_city_images(self, dicts):
         fig, ax = plt.subplots()
@@ -255,9 +264,17 @@ class Report:
 # converter.convert_salary_to_rub_sqlite()
 
 # statistics = Statistics('salary_info.sqlite3', 'Аналитик')
+# statistics.get_skills_statistics()
 # demand_statistics = statistics.get_demand_statistics()
+
+# for year in demand_statistics[0].keys():
+#     print(year, demand_statistics[0][year], demand_statistics[1][year], demand_statistics[2][year], demand_statistics[3][year], sep='\t')
 # geo_statistics = statistics.get_geo_statistics()
-#
+# for city in geo_statistics[0].keys():
+#     print(city, geo_statistics[0][city], sep='\t')
+# print()
+# for city in geo_statistics[1].keys():
+#     print(city, geo_statistics[1][city], sep='\t')
 # report = Report('Аналитик')
 # report.generate_demand_images(demand_statistics)
 # report.generate_city_images(geo_statistics)

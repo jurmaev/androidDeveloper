@@ -20,5 +20,7 @@ import app.views as views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index_page, name= 'index'),
-    path('demand/', views.demand_page, name= 'demand')
+    path('demand/', views.demand_page, name= 'demand'),
+    path('geo/', views.geo_page, name= 'geo'),
+    path('skills/', views.skills_page, name= 'skills')
 ]

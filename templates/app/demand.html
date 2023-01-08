@@ -1,6 +1,10 @@
 {% extends 'app/base.html' %}
 {% load static %}
 {% block content %}
-    <img src="{% static 'app/img/salary_level.png' %}" alt="">
-    <img src="{% static 'app/img/vacancies.png' %}" alt="">
+<section class="demand">
+    <div class="container demand__container">
+        <img src="{% static 'app/img/salary_level.png' %}" alt="">
+        <img src="{% static 'app/img/vacancies.png' %}" alt="">
+    </div>
+</section>
 {% endblock %}
