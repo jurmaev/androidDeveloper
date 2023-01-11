@@ -7,6 +7,8 @@ from urllib.request import urlopen
 from dateutil import rrule
 from matplotlib import pyplot as plt
 from collections import Counter
+import requests
+import re
 
 
 class Converter:
@@ -18,11 +20,6 @@ class Converter:
         # self.get_currency_dynamic_db()
 
     def get_currency_dynamic(self):
-        """
-        Получает dataframe из csv файла
-        :param file_name: название файла
-        :return: dataframe с вакансиями
-        """
         pd.set_option('expand_frame_repr', False)
         df = pd.read_csv(self.file_name,
                          dtype={'name': str, 'key_skills': str, 'salary_from': float, 'salary_to': float,
@@ -33,12 +30,6 @@ class Converter:
         return df
 
     def get_currency_dynamic_csv(self):
-        """
-        Создает csv файл с валютами
-        :param file_name: название файла с валютами
-        :param dynamic_file_name: Название выходного файла с валютами
-        :return: csv файл с валютами
-        """
         df = self.currency_dynamic
         print(df['salary_currency'].value_counts())
         currencies = df['salary_currency'].unique()
@@ -113,7 +104,6 @@ class Converter:
         c.execute(
             'CREATE TABLE IF NOT EXISTS salary_info (name text, salary float, area_name text, published_at date, key_skills text)')
         conn.commit()
-        print(df.head(10))
         df.loc[:, ['name', 'salary', 'area_name', 'published_at', 'key_skills']].to_sql('salary_info', conn,
                                                                                         if_exists='replace',
                                                                                         index=False)
@@ -122,13 +112,17 @@ class Converter:
 
 
 class Statistics:
-    def __init__(self, file_name, vacancy):
+    def __init__(self, file_name, key_words):
         self.file_name = file_name
-        self.vacancy = vacancy
+        self.key_words = key_words
+        self.keywords_sql = self.get_keywords_sql()
 
     @staticmethod
     def get_dict_from_df(df, key1, key2):
         return {df[key1][i]: df[key2][i] for i in range(len(df[key1]))}
+
+    def get_keywords_sql(self):
+        return ' OR '.join([f"LOWER(name) LIKE '%{i}%'" for i in self.key_words])
 
     def get_demand_statistics(self):
         conn = sqlite3.connect(self.file_name)
@@ -139,16 +133,27 @@ class Statistics:
             "SELECT  strftime('%Y', published_at) as year, COUNT(name) as vacancies_number FROM salary_info GROUP BY strftime('%Y', published_at)",
             conn)
         salary_level_by_profession = pd.read_sql_query(
-            f"SELECT strftime('%Y', published_at) as year, ROUND(AVG(salary),4) as average_salary FROM salary_info WHERE LOWER(name) LIKE '%{self.vacancy}%' GROUP BY strftime('%Y', published_at)",
+            f"SELECT strftime('%Y', published_at) as year, ROUND(AVG(salary),4) as average_salary FROM salary_info WHERE {self.keywords_sql} GROUP BY strftime('%Y', published_at)",
             conn)
         vacancies_by_profession = pd.read_sql_query(
-            f"SELECT  strftime('%Y', published_at) as year, COUNT(name) as vacancies_number FROM salary_info WHERE LOWER(name) LIKE '%{self.vacancy}%' GROUP BY strftime('%Y', published_at)",
+            f"SELECT  strftime('%Y', published_at) as year, COUNT(name) as vacancies_number FROM salary_info WHERE {self.keywords_sql} GROUP BY strftime('%Y', published_at)",
             conn)
 
-        return Statistics.get_dict_from_df(salary_level, 'year', 'average_salary'), Statistics.get_dict_from_df(
-            vacancies, 'year', 'vacancies_number'), Statistics.get_dict_from_df(salary_level_by_profession, 'year',
-                                                                                'average_salary'), Statistics.get_dict_from_df(
+        salary_level = Statistics.get_dict_from_df(salary_level, 'year', 'average_salary')
+        salary_level_by_profession = Statistics.get_dict_from_df(salary_level_by_profession, 'year',
+                                                                 'average_salary')
+        vacancies_by_profession = Statistics.get_dict_from_df(
             vacancies_by_profession, 'year', 'vacancies_number')
+        for year in salary_level.keys():
+            if year not in salary_level_by_profession.keys():
+                salary_level_by_profession[year] = 0
+            if year not in vacancies_by_profession.keys():
+                vacancies_by_profession[year] = 0
+
+        return salary_level, Statistics.get_dict_from_df(
+            vacancies, 'year', 'vacancies_number'), dict(
+            sorted(salary_level_by_profession.items(), key=lambda x: x[1])), dict(
+            sorted(vacancies_by_profession.items(), key=lambda x: x[1]))
 
     def get_geo_statistics(self):
         conn = sqlite3.connect(self.file_name)
@@ -167,9 +172,9 @@ class Statistics:
         def append_skills(row):
             if not pd.isna(row['key_skills']):
                 skills[row['published_at']].extend(row['key_skills'].split('\n'))
+
         conn = sqlite3.connect(self.file_name)
-        df = pd.read_sql_query("SELECT * FROM salary_info", conn)
-        df = df[df['name'] == self.vacancy]
+        df = pd.read_sql_query(f"SELECT * FROM salary_info WHERE {self.keywords_sql}", conn)
         df['published_at'] = df['published_at'].transform(lambda x: x[:4])
         skills = {k: [] for k in df['published_at'].unique()}
         df.apply(append_skills, axis=1)
@@ -179,31 +184,10 @@ class Statistics:
 
 
 class Report:
-    """
-    Класс для вывода данных статистики в файл pdf
-
-    Attributes:
-        inputs (Interface): Данные с вводом пользователя
-        statistics (Statistics): Статистика по вакансиям
-    """
-
     def __init__(self, profession):
-        """
-        Инициализирует класс Report
-
-        Args:
-            inputs (Interface): Данные с вводом пользователя
-            statistics (Statistics): Статистика по вакансиям
-        """
         self.profession = profession
 
     def generate_demand_images(self, dicts):
-        """
-        Составляет графики со статистикой и сохраняет их в файл png
-
-        Args:
-            dicts (list): Список словарей со статистикой
-        """
         width = 0.4
         x_nums = np.arange(len(dicts[0].keys()))
         x_list1 = x_nums - width / 2
@@ -217,7 +201,7 @@ class Report:
         ax.tick_params(axis='both', labelsize=8)
         ax.legend(fontsize=8, loc='upper left')
         ax.grid(True, axis='y')
-        plt.savefig('/static/app/img/salary_level.png')
+        plt.savefig('../static/app/img/salary_level.png')
 
         fig, ax = plt.subplots()
         x_nums = np.arange(len(dicts[1].keys()))
@@ -230,7 +214,7 @@ class Report:
         ax.tick_params(labelsize=8)
         ax.legend(fontsize=8, loc='upper left')
         ax.grid(True, axis='y')
-        plt.savefig('/static/app/img/vacancies.png')
+        plt.savefig('../static/app/img/vacancies.png')
 
     def generate_city_images(self, dicts):
         fig, ax = plt.subplots()
@@ -243,20 +227,69 @@ class Report:
         ax.tick_params(axis='y', labelsize=6)
         ax.invert_yaxis()
         ax.grid(True, axis='x')
-        plt.savefig('static/app/img/salary_level_by_profession.png')
+        plt.savefig('../static/app/img/salary_level_by_profession.png')
 
         fig, ax = plt.subplots()
         x_nums = np.concatenate(([1 - sum(dicts[1].values())], list(dicts[1].values())))
         labels = np.concatenate((['Другие'], list(dicts[1].keys())))
         ax.set_title('Доля вакансий по городам')
         ax.pie(x_nums, labels=labels, textprops={'fontsize': 6})
-        plt.savefig('static/app/img/share_of_vacancies.png')
+        plt.savefig('../static/app/img/share_of_vacancies.png')
 
 
+class VacanciesApi:
+    def __init__(self, key_words):
+        self.key_words = key_words
+        self.keywords_query = self.get_keywords_query()
+        print(self.keywords_query)
+
+    def get_keywords_query(self):
+        return '+OR+'.join([i for i in self.key_words])
+
+    def get_vacancies(self, date):
+        def process_vacancy(vacancy):
+            return ' '.join(('; '.join(re.sub(re.compile('<.*?>'), '', vacancy).split('\n')).split()))
+
+        def get_salary(salary_from, salary_to, salary_currency):
+            if not salary_from  and not salary_to :
+                return 'Не указан'
+            if salary_to  and salary_from :
+                return  f'{(salary_from + salary_to) / 2} {salary_currency}'
+            if not salary_from:
+                return f'{salary_to} {salary_currency}'
+            if salary_to:
+                return f'{salary_from} {salary_currency}'
+
+        json = requests.get(
+            f'https://api.hh.ru/vacancies?text={self.keywords_query}&search_field=name&order_by=publication_time&specialization=1&date_from={date}&date_to={date}&per_page=10').json()
+        vacancies = []
+        for vacancy in json['items']:
+            vacancy_inf = requests.get(
+                f'https://api.hh.ru/vacancies/{vacancy["id"]}').json()
+            new_vacancy = {'name': vacancy['name'],
+                           'salary': get_salary(vacancy['salary']['from'], vacancy['salary']['to'], vacancy['salary']['currency']) if vacancy['salary'] else 'Не указан',
+                           'area_name': vacancy['area']['name'],
+                           'published_at': datetime.strptime(vacancy['published_at'], '%Y-%m-%dT%H:%M:%S%z').strftime('%Y-%m-%d %H:%M:%S'),
+                           'key_skills': '; '.join([i['name'] for i in vacancy_inf['key_skills']]) if vacancy_inf[
+                               'key_skills'] else 'Не указаны',
+                           'description': process_vacancy(vacancy_inf['description'][:100] + '...'),
+                           'employer_name': vacancy['employer']['name']}
+            vacancies.append(new_vacancy)
+        return vacancies
+
+    def get_date_vacancies(self, date):
+        date = datetime.strptime(f'2022-12-{date}T14:51:41+0300', '%Y-%m-%dT%H:%M:%S%z').strftime(
+            '%Y-%m-%d')
+
+        vacancies = self.get_vacancies(date)
+        pd.set_option('expand_frame_repr', False)
+        return vacancies
+
+# key_words = ['android-разработчик', 'android', 'андроид', 'andorid', 'andoroid', 'andriod', 'andrind', 'xamarin']
 # converter = Converter('vacancies_with_skills.csv', 'currency_dynamic.csv')
 # converter.convert_salary_to_rub_sqlite()
 
-# statistics = Statistics('salary_info.sqlite3', 'Аналитик')
+# statistics = Statistics('salary_info.sqlite3', key_words)
 # skills_statistics = statistics.get_skills_statistics()
 # print(skills_statistics)
 # demand_statistics = statistics.get_demand_statistics()
@@ -264,7 +297,10 @@ class Report:
 # geo_statistics = statistics.get_geo_statistics()
 # print(geo_statistics[0])
 # print(geo_statistics[1])
-
-# report = Report('Аналитик')
+#
+# report = Report('Android-разработчик')
 # report.generate_demand_images(demand_statistics)
 # report.generate_city_images(geo_statistics)
+
+# vacancies_api = VacanciesApi(key_words)
+# vacancies = vacancies_api.get_date_vacancies('15')

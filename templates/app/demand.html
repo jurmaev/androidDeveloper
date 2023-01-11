@@ -6,5 +6,26 @@
         <img src="{% static 'app/img/salary_level.png' %}" alt="">
         <img src="{% static 'app/img/vacancies.png' %}" alt="">
     </div>
+    <div class="container table__container">
+        <h2 class="table__header">Статистика по годам</h2>
+        <table class="tables__stats">
+            <tr>
+                <th class="tables__cell">{{ headings.0 }}</th>
+                <th class="tables__cell">{{ headings.1 }}</th>
+                <th class="tables__cell">{{ headings.2 }}</th>
+                <th class="tables__cell">{{ headings.3 }}</th>
+                <th class="tables__cell">{{ headings.4 }}</th>
+            </tr>
+            {% for item in year_statistics %}
+            <tr>
+                <td class="tables__cell">{{ item.year }}</td>
+                <td class="tables__cell">{{ item.average_salary }}</td>
+                <td class="tables__cell">{{ item.average_salary_by_profession }}</td>
+                <td class="tables__cell">{{ item.number_of_vacancies }}</td>
+                <td class="tables__cell">{{ item.number_of_vacancies_by_profession }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 </section>
 {% endblock %}

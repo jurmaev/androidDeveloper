@@ -23,6 +23,7 @@ urlpatterns = [
     path('demand/', views.demand_page, name= 'demand'),
     path('geo/', views.geo_page, name= 'geo'),
     path('skills/', views.skills_page, name= 'skills'),
-    path('fill_models/', views.fill_models, name= 'fill_models')
+    path('fill_models/', views.fill_models, name= 'fill_models'),
+    path('vacancies/', views.vacancies_page, name= 'vacancies')
 
 ]

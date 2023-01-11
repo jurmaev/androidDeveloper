@@ -8,7 +8,6 @@
         sidenav.style.width = '300px';
         main.style.marginLeft = '300px';
         main.style.opacity = '0.33';
-        // main.style.backgroundColor = 'rgba(240,240,240,0.4)';
         closeBtn.setAttribute('data-open') = 'true';
     }
 
@@ -16,10 +15,20 @@
         sidenav.style.width = '0';
         main.style.marginLeft = '0';
         main.style.opacity = '1';
-        // main.style.backgroundColor = 'transparent';
         closeBtn.setAttribute('data-open') = 'false';
     }
 
     closeBtn.addEventListener('click', closeNav);
     openBtn.addEventListener('click', openNav);
+
+    const accs = document.querySelectorAll('.skills__accordion');
+    console.log(accs)
+    accs.forEach(acc => {
+        acc.addEventListener('click', () => {
+            acc.classList.toggle('skills__accordion--active');
+            const panel = acc.nextElementSibling;
+            if(panel.style.maxHeight) panel.style.maxHeight = null;
+            else panel.style.maxHeight = panel.scrollHeight + "px";
+        })
+    });
 })();

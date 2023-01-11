@@ -1,0 +1,31 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block content %}
+<section class="vacancies">
+    <div class="container table__container">
+        <h2 class="table__header">Вакансии HH.RU</h2>
+        <table class="tables__stats">
+            <tr>
+                <th class="tables__cell">{{ headings.0 }}</th>
+                <th class="tables__cell">{{ headings.1 }}</th>
+                <th class="tables__cell">{{ headings.2 }}</th>
+                <th class="tables__cell">{{ headings.3 }}</th>
+                <th class="tables__cell">{{ headings.4 }}</th>
+                <th class="tables__cell">{{ headings.5 }}</th>
+                <th class="tables__cell">{{ headings.6 }}</th>
+            </tr>
+            {% for item in vacancies %}
+            <tr>
+                <td class="tables__cell">{{ item.name }}</td>
+                <td class="tables__cell">{{ item.description }}</td>
+                <td class="tables__cell">{{ item.key_skills }}</td>
+                <td class="tables__cell">{{ item.employer_name }}</td>
+                <td class="tables__cell">{{ item.salary }}</td>
+                <td class="tables__cell">{{ item.area_name }}</td>
+                <td class="tables__cell">{{ item.published_at }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</section>
+{% endblock %}
