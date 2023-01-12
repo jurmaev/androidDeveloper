@@ -253,11 +253,11 @@ class VacanciesApi:
         def get_salary(salary_from, salary_to, salary_currency):
             if not salary_from  and not salary_to :
                 return 'Не указан'
-            if salary_to  and salary_from :
+            if salary_to  and salary_from:
                 return  f'{(salary_from + salary_to) / 2} {salary_currency}'
             if not salary_from:
                 return f'{salary_to} {salary_currency}'
-            if salary_to:
+            if not salary_to:
                 return f'{salary_from} {salary_currency}'
 
         json = requests.get(
